@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { background: #F3F4F1; color: #15181D; font-family: var(--font-body), system-ui, sans-serif; }
+h1, h2, h3, .font-display { font-family: var(--font-display), system-ui, sans-serif; }
+:focus-visible { outline: 3px solid #F5A300; outline-offset: 2px; }
+.hazard { height: 14px; background: repeating-linear-gradient(135deg, #F5A300 0 14px, #15181D 14px 28px); }
+.input { width: 100%; border: 2px solid #15181D; background: #fff; padding: 0.6rem 0.8rem; border-radius: 4px; }
+.input:focus { outline: 3px solid #F5A300; outline-offset: 0; }
+.btn { display: inline-block; border-radius: 4px; padding: 0.7rem 1.3rem; font-weight: 700; border: 2px solid #15181D; transition: transform 0.1s; text-align: center; }
+.btn:active { transform: translateY(1px); }
+.btn-signal { background: #F5A300; color: #15181D; }
+.btn-signal:hover { background: #ffb826; }
+.btn-ink { background: #15181D; color: #fff; }
+.btn-ink:hover { background: #2B313A; }
+.btn-line { background: #fff; }
+.btn-line:hover { background: #ece9df; }
+.ticket { background: #fff; border: 2px solid #15181D; box-shadow: 6px 6px 0 #15181D; }
+.perf { border-top: 2px dashed #15181D; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .ticket { box-shadow: none; }
+}
