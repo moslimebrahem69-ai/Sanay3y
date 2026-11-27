@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   const user = `نوع الجهاز: ${b.category}\nالماركة: ${brand || "غير محدد"}\nالموديل: ${model || "غير محدد"}\nالضمان: ${warranty}\nكود الخطأ الظاهر: ${code || "لا يوجد"}\nوصف العطل: ${description}`;
   const models = Array.from(new Set([
-    process.env.GEMINI_MODEL || "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite",
+    process.env.GEMINI_MODEL || "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite",
   ]));
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ parts: [{ text: user }] }],
