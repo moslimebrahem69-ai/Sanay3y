@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   const brand = String(b?.brand ?? "").slice(0, 80), model = String(b?.model ?? "").slice(0, 80), code = String(b?.code ?? "").slice(0, 60);
 
   const user = `نوع الجهاز: ${b.category}\nالماركة: ${brand || "غير محدد"}\nالموديل: ${model || "غير محدد"}\nالضمان: ${warranty}\nكود الخطأ الظاهر: ${code || "لا يوجد"}\nوصف العطل: ${description}`;
-  const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const modelName = process.env.GEMINI_MODEL || "gemini-3.8-flash";
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ parts: [{ text: user }] }],
     generationConfig: { responseMimeType: "application/json", responseSchema: SCHEMA },
