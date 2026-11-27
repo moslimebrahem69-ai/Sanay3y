@@ -47,39 +47,43 @@ export async function POST(req: NextRequest) {
   const brand = String(b?.brand ?? "").slice(0, 80), model = String(b?.model ?? "").slice(0, 80), code = String(b?.code ?? "").slice(0, 60);
 
   const user = `نوع الجهاز: ${b.category}\nالماركة: ${brand || "غير محدد"}\nالموديل: ${model || "غير محدد"}\nالضمان: ${warranty}\nكود الخطأ الظاهر: ${code || "لا يوجد"}\nوصف العطل: ${description}`;
-  const modelName = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+  const models = Array.from(new Set([
+    process.env.GEMINI_MODEL || "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite",
+  ]));
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ parts: [{ text: user }] }],
     generationConfig: { responseMimeType: "application/json", responseSchema: SCHEMA },
   });
 
-  let delay = 800;
   let lastStatus = 0;
-  for (let i = 0; i < 3; i++) {
-    try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`, {
-        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body,
-      });
-      if (r.ok) {
-        const data = await r.json();
-        const p = JSON.parse(data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}");
-        const sev = ["low", "medium", "high", "critical"].includes(p.severity) ? p.severity : "medium";
-        return NextResponse.json({ report: {
-          safety: arr(p.safety), causes: arr(p.causes), steps: arr(p.steps), tools: arr(p.tools), repair: arr(p.repair),
-          severity: sev, cost: String(p.cost ?? ""), time: String(p.time ?? ""), preventive: arr(p.preventive),
-          proHelp: String(p.proHelp ?? ""), questions: arr(p.questions).slice(0, 3),
-        } });
-      }
-      lastStatus = r.status;
-      console.error("Gemini error", r.status, (await r.text()).slice(0, 300));
-      if (r.status !== 429 && r.status < 500) break;
-    } catch (e) { console.error("Gemini fetch failed", e); }
-    await new Promise((res) => setTimeout(res, delay));
-    delay *= 2;
+  outer: for (let m = 0; m < models.length; m++) {
+    for (let attempt = 0; attempt < (m === 0 ? 2 : 1); attempt++) {
+      try {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${models[m]}:generateContent`, {
+          method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body,
+        });
+        if (r.ok) {
+          const data = await r.json();
+          const p = JSON.parse(data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}");
+          const sev = ["low", "medium", "high", "critical"].includes(p.severity) ? p.severity : "medium";
+          return NextResponse.json({ report: {
+            safety: arr(p.safety), causes: arr(p.causes), steps: arr(p.steps), tools: arr(p.tools), repair: arr(p.repair),
+            severity: sev, cost: String(p.cost ?? ""), time: String(p.time ?? ""), preventive: arr(p.preventive),
+            proHelp: String(p.proHelp ?? ""), questions: arr(p.questions).slice(0, 3),
+          } });
+        }
+        lastStatus = r.status;
+        console.error("Gemini error", models[m], r.status, (await r.text()).slice(0, 300));
+        if (r.status === 401 || r.status === 403) break outer;
+        if (r.status !== 429 && r.status < 500) break;
+      } catch (e) { console.error("Gemini fetch failed", models[m], e); }
+      await new Promise((res) => setTimeout(res, 700));
+    }
   }
   const hint = [400, 401, 403].includes(lastStatus) ? "مفتاح الـ API غير صالح أو غير مصرّح له. اعمل مفتاح جديد من aistudio.google.com/apikey."
-    : lastStatus === 404 ? "اسم الموديل غير متاح، غيّر GEMINI_MODEL."
+    : lastStatus === 404 ? "الموديلات المضبوطة غير متاحة، غيّر GEMINI_MODEL."
     : lastStatus === 429 ? "تم تجاوز الحد المجاني مؤقتاً، جرّب بعد دقيقة."
+    : lastStatus === 503 ? "خدمة الذكاء الاصطناعي مشغولة حالياً، جرّب بعد دقيقة."
     : "تعذّر الحصول على التشخيص الآن، جرّب مرة أخرى بعد قليل.";
   return err(lastStatus ? `${hint} (رمز ${lastStatus})` : hint, 502);
 }
