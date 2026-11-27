@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
   });
 
   let delay = 800;
+  let lastStatus = 0;
   for (let i = 0; i < 3; i++) {
     try {
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`, {
@@ -69,10 +70,16 @@ export async function POST(req: NextRequest) {
           proHelp: String(p.proHelp ?? ""), questions: arr(p.questions).slice(0, 3),
         } });
       }
+      lastStatus = r.status;
+      console.error("Gemini error", r.status, (await r.text()).slice(0, 300));
       if (r.status !== 429 && r.status < 500) break;
-    } catch {}
+    } catch (e) { console.error("Gemini fetch failed", e); }
     await new Promise((res) => setTimeout(res, delay));
     delay *= 2;
   }
-  return err("تعذّر الحصول على التشخيص الآن، جرّب مرة أخرى بعد قليل.", 502);
+  const hint = [400, 401, 403].includes(lastStatus) ? "مفتاح الـ API غير صالح أو غير مصرّح له. اعمل مفتاح جديد من aistudio.google.com/apikey."
+    : lastStatus === 404 ? "اسم الموديل غير متاح، غيّر GEMINI_MODEL."
+    : lastStatus === 429 ? "تم تجاوز الحد المجاني مؤقتاً، جرّب بعد دقيقة."
+    : "تعذّر الحصول على التشخيص الآن، جرّب مرة أخرى بعد قليل.";
+  return err(lastStatus ? `${hint} (رمز ${lastStatus})` : hint, 502);
 }
