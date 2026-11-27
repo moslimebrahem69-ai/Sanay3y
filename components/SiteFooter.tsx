@@ -11,7 +11,7 @@ export default function SiteFooter() {
         </div>
         <div className="md:text-end space-y-2">
           <a href={waLink()} target="_blank" rel="noopener noreferrer" className="block font-bold text-signal" dir="ltr">WhatsApp {WA_DISPLAY}</a>
-          <p>تطوير: مسلم إبراهيم</p>
+          <p><a href="/privacy" className="hover:text-signal">سياسة الخصوصية</a> · تطوير: مسلم إبراهيم</p>
           <p className="flex gap-4 md:justify-end">
             {Object.entries(LINKS).map(([k, v]) => <a key={k} href={v} target="_blank" rel="noopener noreferrer" className="hover:text-signal capitalize">{k}</a>)}
           </p>

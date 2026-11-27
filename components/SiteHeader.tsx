@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
 
-const nav: [string, string][] = [["/", "الرئيسية"], ["/diagnose", "تشخيص"], ["/history", "سجلّي"], ["/faq", "أسئلة"], ["/contact", "تواصل"]];
+const nav: [string, string][] = [["/", "الرئيسية"], ["/diagnose", "تشخيص"], ["/history", "سجلّي"], ["/guides", "مقالات"], ["/faq", "أسئلة"], ["/contact", "تواصل"]];
 
 export default function SiteHeader() {
   return (
